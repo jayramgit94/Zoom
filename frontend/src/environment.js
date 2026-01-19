@@ -8,7 +8,7 @@ const isProd =
 
 // Get server URL from environment variables or use defaults
 const server = isProd
-  ? import.meta.env.VITE_BACKEND_URL || "https://zoom-zako.onrender.com"
+  ? import.meta.env.VITE_BACKEND_URL || ""
   : import.meta.env.VITE_BACKEND_URL || "http://localhost:8001";
 
 console.log(

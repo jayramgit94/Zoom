@@ -8,11 +8,16 @@ export const connectToSocket = (server) => {
   // Determine allowed origins based on environment
   const allowedOrigins =
     process.env.NODE_ENV === "production"
-      ? [process.env.FRONTEND_URL || "https://yourdomain.com"]
+      ? [
+          process.env.FRONTEND_URL,
+          "https://yourdomain.com",
+          /\.vercel\.app$/, // Allow all Vercel preview & production URLs
+        ]
       : [
           "http://localhost:8000",
           "http://127.0.0.1:8000",
           "http://localhost:3000",
+          "http://127.0.0.1:3000",
         ];
 
   const io = new Server(server, {
@@ -20,6 +25,7 @@ export const connectToSocket = (server) => {
       origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true,
+      allowEIO3: true, // Support both Socket.io v3 and v4
     },
   });
 
