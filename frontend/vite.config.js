@@ -19,7 +19,4 @@ export default defineConfig({
     sourcemap: false,
     minify: "terser",
   },
-  define: {
-    "process.env": process.env,
-  },
 });
