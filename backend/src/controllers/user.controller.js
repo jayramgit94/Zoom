@@ -1,9 +1,20 @@
-import httpStatus from "http-status";
-import { User } from "../models/user.model.js";
-import bcrypt, { hash } from "bcrypt";
-
+import bcrypt from "bcrypt";
 import crypto from "crypto";
+import httpStatus from "http-status";
+import mongoose from "mongoose";
 import { Meeting } from "../models/meeting.model.js";
+import { User } from "../models/user.model.js";
+
+// Middleware to check DB connection
+const checkDBConnection = async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database connection not ready. Please try again in a moment.",
+    });
+  }
+  next();
+};
+
 const login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -12,7 +23,7 @@ const login = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username }).maxTimeMS(10000); // 10 second timeout
     if (!user) {
       return res
         .status(httpStatus.NOT_FOUND)
@@ -33,7 +44,10 @@ const login = async (req, res) => {
         .json({ message: "Password sahi daalo broo..." });
     }
   } catch (e) {
-    return res.status(500).json({ message: `Something went wrong ${e}` });
+    console.error("Login error:", e);
+    return res
+      .status(500)
+      .json({ message: `Something went wrong ${e.message}` });
   }
 };
 
@@ -41,7 +55,7 @@ const register = async (req, res) => {
   const { name, username, password } = req.body;
 
   try {
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username }).maxTimeMS(10000); // 10 second timeout
     if (existingUser) {
       return res
         .status(httpStatus.FOUND)
@@ -60,7 +74,8 @@ const register = async (req, res) => {
 
     res.status(httpStatus.CREATED).json({ message: "User Registered" });
   } catch (e) {
-    res.json({ message: `Something went wrong ${e}` });
+    console.error("Register error:", e);
+    res.status(500).json({ message: `Something went wrong ${e.message}` });
   }
 };
 
@@ -68,16 +83,17 @@ const getUserHistory = async (req, res) => {
   const { token } = req.query;
 
   try {
-    const user = await User.findOne({ token: token });
+    const user = await User.findOne({ token: token }).maxTimeMS(10000);
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const meetings = await Meeting.find({ user_id: user._id });
+    const meetings = await Meeting.find({ user_id: user._id }).maxTimeMS(10000);
     res.json(meetings);
   } catch (e) {
-    res.status(500).json({ message: `Something went wrong ${e}` });
+    console.error("Get history error:", e);
+    res.status(500).json({ message: `Something went wrong ${e.message}` });
   }
 };
 
@@ -85,7 +101,7 @@ const addToHistory = async (req, res) => {
   const { token, meeting_code } = req.body;
 
   try {
-    const user = await User.findOne({ token: token });
+    const user = await User.findOne({ token: token }).maxTimeMS(10000);
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -104,4 +120,4 @@ const addToHistory = async (req, res) => {
   }
 };
 
-export { login, register, getUserHistory, addToHistory };
+export { addToHistory, checkDBConnection, getUserHistory, login, register };

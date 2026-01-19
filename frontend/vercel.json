@@ -1,12 +1,13 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "env": {
-    "VITE_BACKEND_URL": "@vite_backend_url"
-  },
   "rewrites": [
     {
-      "source": "/:path((?!_next|static|api|favicon|robots\\.txt).*)",
+      "source": "/api/:path*",
+      "destination": "https://zoom-zako.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
