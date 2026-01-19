@@ -15,29 +15,43 @@ export const AuthProvider = ({ children }) => {
   const router = useNavigate();
 
   const handleRegister = async (name, username, password) => {
-    let request = await client.post("/register", {
-      name: name,
-      username: username,
-      password: password,
-    });
+    try {
+      let request = await client.post("/register", {
+        name: name,
+        username: username,
+        password: password,
+      });
 
-    if (request.status === httpStatus.CREATED) {
-      return request.data.message;
+      if (request.status === httpStatus.CREATED) {
+        return { success: true, message: request.data.message };
+      }
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message ||
+        "Registration failed. Please try again.";
+      console.error("Registration error:", errorMsg);
+      return { success: false, message: errorMsg };
     }
   };
 
   const handleLogin = async (username, password) => {
-    let request = await client.post("/login", {
-      username: username,
-      password: password,
-    });
+    try {
+      let request = await client.post("/login", {
+        username: username,
+        password: password,
+      });
 
-    console.log(username, password);
-    console.log(request.data);
-
-    if (request.status === httpStatus.OK) {
-      localStorage.setItem("token", request.data.token);
-      router("/home");
+      if (request.status === httpStatus.OK) {
+        localStorage.setItem("token", request.data.token);
+        router("/home");
+        return { success: true, message: "Login successful" };
+      }
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message ||
+        "Login failed. Please check your credentials.";
+      console.error("Login error:", errorMsg);
+      return { success: false, message: errorMsg };
     }
   };
 

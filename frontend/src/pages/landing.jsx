@@ -1,6 +1,5 @@
-import React from "react";
-import "../App.css";
 import { Link, useNavigate } from "react-router-dom";
+import "../App.css";
 export default function LandingPage() {
   const router = useNavigate();
 
@@ -13,10 +12,11 @@ export default function LandingPage() {
         <div className="navlist">
           <p
             onClick={() => {
-              router("/random");
+              const randomCode = `room-${Math.random().toString(36).substring(7)}`;
+              router(`/${randomCode}`);
             }}
           >
-            Join as Friend 
+            Join as Friend
           </p>
           <p
             onClick={() => {

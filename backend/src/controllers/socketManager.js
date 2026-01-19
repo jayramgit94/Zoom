@@ -5,11 +5,20 @@ let messages = {};
 let timeOnline = {};
 
 export const connectToSocket = (server) => {
+  // Determine allowed origins based on environment
+  const allowedOrigins =
+    process.env.NODE_ENV === "production"
+      ? [process.env.FRONTEND_URL || "https://yourdomain.com"]
+      : [
+          "http://localhost:8000",
+          "http://127.0.0.1:8000",
+          "http://localhost:3000",
+        ];
+
   const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
-      allowedHeaders: ["*"],
       credentials: true,
     },
   });
@@ -33,7 +42,7 @@ export const connectToSocket = (server) => {
         io.to(connections[path][a]).emit(
           "user-joined",
           socket.id,
-          connections[path]
+          connections[path],
         );
       }
 
@@ -43,7 +52,7 @@ export const connectToSocket = (server) => {
             "chat-message",
             messages[path][a]["data"],
             messages[path][a]["sender"],
-            messages[path][a]["socket-id-sender"]
+            messages[path][a]["socket-id-sender"],
           );
         }
       }
@@ -62,7 +71,7 @@ export const connectToSocket = (server) => {
 
           return [room, isFound];
         },
-        ["", false]
+        ["", false],
       );
 
       if (found === true) {
@@ -87,12 +96,11 @@ export const connectToSocket = (server) => {
       var diffTime = Math.abs(timeOnline[socket.id] - new Date());
 
       var key;
-      //k = room 
+      //k = room
       //v = array of connections in that room
-      
 
       for (const [k, v] of JSON.parse(
-        JSON.stringify(Object.entries(connections))
+        JSON.stringify(Object.entries(connections)),
       )) {
         for (let a = 0; a < v.length; ++a) {
           if (v[a] === socket.id) {
