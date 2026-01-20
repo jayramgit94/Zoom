@@ -1,15 +1,15 @@
-import React, { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import Card from "@mui/material/Card";
+import HomeIcon from "@mui/icons-material/Home";
+import { IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import HomeIcon from "@mui/icons-material/Home";
 import Container from "@mui/material/Container";
-import { IconButton } from "@mui/material";
+import Typography from "@mui/material/Typography";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../contexts/AuthContext";
 
 export default function History() {
   const { getHistoryOfUser } = useContext(AuthContext);
@@ -17,6 +17,7 @@ export default function History() {
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cleared, setCleared] = useState(false);
 
   const routeTo = useNavigate();
 
@@ -24,6 +25,12 @@ export default function History() {
     const fetchHistory = async () => {
       try {
         setLoading(true);
+        const isCleared = localStorage.getItem("historyCleared") === "true";
+        setCleared(isCleared);
+        if (isCleared) {
+          setMeetings([]);
+          return;
+        }
         const history = await getHistoryOfUser();
         console.log("History fetched:", history);
         setMeetings(history || []);
@@ -39,6 +46,38 @@ export default function History() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const getChatMeta = (meetingCode) => {
+    try {
+      const raw = localStorage.getItem(`chatHistory:${meetingCode}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) return null;
+      const lastMessage = parsed[parsed.length - 1];
+      return {
+        count: parsed.length,
+        lastText: lastMessage?.data || "",
+      };
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const handleClearHistory = () => {
+    localStorage.setItem("historyCleared", "true");
+    setCleared(true);
+    setMeetings([]);
+  };
+
+  const handleRestoreHistory = () => {
+    localStorage.removeItem("historyCleared");
+    setCleared(false);
+    setLoading(true);
+    getHistoryOfUser()
+      .then((history) => setMeetings(history || []))
+      .catch((err) => setError(err.message || "Failed to fetch history"))
+      .finally(() => setLoading(false));
+  };
+
   let formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, "0");
@@ -49,72 +88,89 @@ export default function History() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-        padding: "20px",
-      }}
-    >
-      <IconButton
-        onClick={() => {
-          routeTo("/home");
-        }}
-        style={{ marginBottom: "20px" }}
-      >
-        <HomeIcon />
-      </IconButton>
-
-      <Container maxWidth="md">
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{ mb: 3, fontWeight: "bold" }}
-        >
-          Meeting History
-        </Typography>
-
-        {loading ? (
-          <Typography
-            variant="body1"
-            color="textSecondary"
-            sx={{ textAlign: "center", py: 3 }}
+    <div className="historyPage">
+      <header className="historyHeader">
+        <div>
+          <Typography variant="h4" component="h1" className="historyTitle">
+            Meeting history
+          </Typography>
+          <Typography variant="body2" className="historySubtitle">
+            Review and rejoin your recent calls.
+          </Typography>
+        </div>
+        <div className="historyHeaderActions">
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={cleared ? handleRestoreHistory : handleClearHistory}
+            className="historyClearButton"
           >
+            {cleared ? "Restore history" : "Clear history"}
+          </Button>
+          <IconButton
+            onClick={() => {
+              routeTo("/home");
+            }}
+            className="historyHomeButton"
+          >
+            <HomeIcon />
+          </IconButton>
+        </div>
+      </header>
+
+      <Container maxWidth="md" className="historyContainer">
+        {loading ? (
+          <Typography variant="body1" className="historyMessage">
             Loading history...
           </Typography>
         ) : error ? (
-          <Card sx={{ backgroundColor: "#ffebee", p: 2 }}>
+          <Card className="historyError">
             <Typography color="error">Error: {error}</Typography>
           </Card>
         ) : meetings.length !== 0 ? (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box className="historyList">
             {meetings.map((meeting, i) => {
+              const chatMeta = getChatMeta(meeting.meetingCode);
               return (
-                <Card key={i} variant="outlined" sx={{ boxShadow: 2 }}>
+                <Card key={i} className="historyCard" variant="outlined">
                   <CardContent>
-                    <Typography
-                      sx={{ fontSize: 16, fontWeight: "bold" }}
-                      color="primary"
-                      gutterBottom
-                    >
+                    <Typography className="historyCode" gutterBottom>
                       Meeting Code: {meeting.meetingCode}
                     </Typography>
 
-                    <Typography
-                      sx={{ mb: 1.5, fontSize: 14 }}
-                      color="textSecondary"
-                    >
+                    <Typography className="historyMeta">
                       Date: {formatDate(meeting.date)}
                     </Typography>
+                    {chatMeta ? (
+                      <Typography className="historyChatMeta">
+                        {chatMeta.count} chat messages • Last:{" "}
+                        {chatMeta.lastText}
+                      </Typography>
+                    ) : (
+                      <Typography className="historyChatMeta">
+                        No chat messages saved
+                      </Typography>
+                    )}
                   </CardContent>
+                  <CardActions className="historyActions">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        routeTo(`/${meeting.meetingCode}`);
+                      }}
+                    >
+                      Rejoin
+                    </Button>
+                  </CardActions>
                 </Card>
               );
             })}
           </Box>
         ) : (
-          <Card sx={{ p: 3, textAlign: "center", backgroundColor: "#e3f2fd" }}>
+          <Card className="historyEmpty">
             <Typography variant="body1" color="textSecondary">
-              No meeting history found. Start a new meeting to see it here!
+              No meetings yet. Start a new meeting to see it here.
             </Typography>
           </Card>
         )}

@@ -13,7 +13,19 @@ import { AuthContext } from "../contexts/AuthContext";
 
 // TODO remove, this demo shouldn't need to reset the theme.
 
-const defaultTheme = createTheme();
+const defaultTheme = createTheme({
+  palette: {
+    primary: {
+      main: "#3b82f6",
+    },
+    background: {
+      default: "#f8fafc",
+    },
+  },
+  typography: {
+    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+  },
+});
 
 export default function Authentication() {
   const [username, setUsername] = React.useState();
@@ -60,7 +72,7 @@ export default function Authentication() {
 
   return (
     <ThemeProvider theme={defaultTheme}>
-      <Grid container component="main" sx={{ height: "100vh" }}>
+      <Grid container component="main" sx={{ minHeight: "100vh" }}>
         <CssBaseline />
         <Grid
           item
@@ -68,49 +80,93 @@ export default function Authentication() {
           sm={4}
           md={7}
           sx={{
-            backgroundImage:
-              "url(https://source.unsplash.com/random?wallpapers)",
-            backgroundRepeat: "no-repeat",
-            backgroundColor: (t) =>
-              t.palette.mode === "light"
-                ? t.palette.grey[50]
-                : t.palette.grey[900],
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            background:
+              "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(59,130,246,0.4))",
+            color: "#f8fafc",
+            display: { xs: "none", sm: "flex" },
+            flexDirection: "column",
+            justifyContent: "space-between",
+            p: 6,
           }}
-        />
-        <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+        >
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  background: "#60a5fa",
+                  boxShadow: "0 0 12px rgba(96,165,250,0.8)",
+                }}
+              />
+              <Box component="h2" sx={{ fontSize: "1.4rem" }}>
+                Apna Meet
+              </Box>
+            </Box>
+            <Box sx={{ mt: 8, maxWidth: 380 }}>
+              <Box component="h1" sx={{ fontSize: "2.5rem", mb: 2 }}>
+                Welcome back.
+              </Box>
+              <Box sx={{ color: "rgba(248,250,252,0.8)", fontSize: "1rem" }}>
+                Sign in to keep your meetings organized, secure, and always in
+                sync.
+              </Box>
+            </Box>
+          </Box>
+          <Box sx={{ fontSize: "0.9rem", color: "rgba(248,250,252,0.7)" }}>
+            Private, fast, and built for calm conversations.
+          </Box>
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          sm={8}
+          md={5}
+          component={Paper}
+          elevation={0}
+          square
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#f8fafc",
+          }}
+        >
           <Box
             sx={{
-              my: 8,
-              mx: 4,
+              my: 6,
+              mx: { xs: 3, sm: 6 },
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
+              alignItems: "stretch",
+              width: "100%",
+              maxWidth: 420,
             }}
           >
-            <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
+            <Avatar sx={{ mb: 2, bgcolor: "primary.main" }}>
               <LockOutlinedIcon />
             </Avatar>
 
-            <div>
+            <Box sx={{ mb: 3 }}>
               <Button
-                variant={formState === 0 ? "contained" : ""}
+                variant={formState === 0 ? "contained" : "outlined"}
                 onClick={() => {
                   setFormState(0);
                 }}
+                sx={{ mr: 1 }}
               >
                 Sign In
               </Button>
               <Button
-                variant={formState === 1 ? "contained" : ""}
+                variant={formState === 1 ? "contained" : "outlined"}
                 onClick={() => {
                   setFormState(1);
                 }}
               >
                 Sign Up
               </Button>
-            </div>
+            </Box>
 
             <Box component="form" noValidate sx={{ mt: 1 }}>
               {formState === 1 ? (
@@ -123,6 +179,7 @@ export default function Authentication() {
                   name="username"
                   value={name}
                   autoFocus
+                  size="small"
                   onChange={(e) => setName(e.target.value)}
                 />
               ) : (
@@ -137,7 +194,8 @@ export default function Authentication() {
                 label="Username"
                 name="username"
                 value={username}
-                autoFocus
+                autoFocus={formState === 0}
+                size="small"
                 onChange={(e) => setUsername(e.target.value)}
               />
               <TextField
@@ -148,11 +206,12 @@ export default function Authentication() {
                 label="Password"
                 value={password}
                 type="password"
+                size="small"
                 onChange={(e) => setPassword(e.target.value)}
                 id="password"
               />
 
-              <p style={{ color: "red" }}>{error}</p>
+              <Box sx={{ color: "#ef4444", minHeight: 20 }}>{error}</Box>
 
               <Button
                 type="button"
